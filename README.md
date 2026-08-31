@@ -164,10 +164,15 @@ This means generating 10 reports costs roughly the same as generating 1 report's
 
 ## Examples
 
-See [`examples/`](examples/) for sample reports:
+### Proposal cover
+![Proposal cover](examples/proposal-preview.png)
 
-- `proposal.html` — A service proposal with pricing tables, timeline, terms
-- `confirmation.html` — A shipping rule confirmation with compare table and checklist
+### Confirmation cover
+![Confirmation cover](examples/confirmation-preview.png)
+
+Full HTML + PDF in [`examples/`](examples/):
+- [`proposal.html`](examples/proposal.html) — service proposal with pricing, timeline, terms ([PDF](examples/proposal.pdf))
+- [`confirmation.html`](examples/confirmation.html) — shipping rule change with compare table and checklist ([PDF](examples/confirmation.pdf))
 
 ## Project structure
 
@@ -181,7 +186,11 @@ paged-report/
 │   └── component-catalog.html  ← Visual component reference
 └── examples/
     ├── proposal.html      ← Example: service proposal
-    └── confirmation.html  ← Example: rule confirmation
+    ├── proposal.pdf       ← A4 PDF
+    ├── proposal-preview.png ← Cover screenshot
+    ├── confirmation.html  ← Example: rule confirmation
+    ├── confirmation.pdf   ← A4 PDF
+    └── confirmation-preview.png ← Cover screenshot
 ```
 
 ## Integration with artifact-delivery
