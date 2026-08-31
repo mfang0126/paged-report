@@ -2,6 +2,9 @@
 name: paged-report
 description: "Generate client HTML reports with A4 print via WebBridge. Triggers: client report, 发给客户, 报价, 进度汇报, 确认函."
 version: 1.1.0
+author: Ming Fang
+license: MIT
+platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [reports, html, client, print, a4]
