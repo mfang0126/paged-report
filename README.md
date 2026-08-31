@@ -18,8 +18,8 @@ A [Hermes Agent](https://hermes-agent.nousresearch.com) skill that turns structu
 ## Quick start (Hermes users)
 
 ```bash
-# Install
-hermes skill install paged-report
+# Install (clone to Hermes skills directory)
+git clone https://github.com/mfang0126/paged-report.git ~/.hermes/skills/paged-report
 ```
 
 Then in any Hermes session:
