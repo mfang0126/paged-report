@@ -224,5 +224,9 @@ Same template, swap text. `lang="zh-CN"` or `lang="en"`. Generate two files if n
 - Always inline CSS — never `<link>` external stylesheet
 - One `.report-page` = one printed page — don't nest
 - Hero only on first `.report-page.cover`
+- **Long content overflow**: if a section's content exceeds one A4 page (~880px / ~45-50 lines at 11pt), split it into two `.report-page` divs. A single `.report-page` with `page-break-after: always` will spill onto a second physical page then force a break, leaving a mostly-blank page.
 - WebBridge: reuse `session: "report-gen"`, don't create new session per report
+- **Load kimi-webbridge skill** before using WebBridge curl commands — agents unfamiliar with the daemon will stall
 - Content that needs images: use `<img>` with max-width:100%, CSS handles sizing
+- `lang="en"` reports: replace TOC heading `目录` with `Contents`, hero eyebrow with English labels
+- Font weights 620/630/650 rely on Inter variable font; fallback stacks (PingFang SC, YaHei) will synthesize — acceptable but worth noting
