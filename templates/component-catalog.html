@@ -40,14 +40,14 @@ body {
   background: var(--paper);
   border: 1px solid var(--line);
   box-shadow: 0 18px 44px rgba(27,43,54,0.06);
-  /* A4 printable area: 178mm wide × 261mm tall */
+  /* A4-oriented printable area: 178mm wide × 261mm tall */
   /* At 96dpi: 673px × 987px */
   /* With padding (54+62 top/bot, 58*2 sides): content area ~557px × 871px */
-  min-height: 880px; /* enforce minimum to prevent short-page */
+  min-height: 880px; /* screen-space minimum; verify print output */
 }
 .report-page:last-child { margin-bottom: 0; }
 
-/* --- FILL STRATEGY: when content is short, push footer down --- */
+/* --- FILL STRATEGY: attempt to push footer down when content fits --- */
 .report-page .spacer { flex: 1; }
 .report-page.flex-col {
   display: flex;
@@ -214,7 +214,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
 .checklist li.done::before { content: "☑"; color: var(--green); }
 
 /* ============================================
-   A4 PRINT ENGINE
+   A4 PRINT STYLES
    ============================================ */
 @media print {
   @page { size: A4; margin: 18mm 16mm; }
@@ -266,9 +266,9 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
 <!-- PAGE 1: COVER -->
 <div class="report-page cover">
   <div class="hero">
-    <p class="eyebrow">ACME Corp · 项目报告</p>
+    <p class="eyebrow">Example Client · 项目报告</p>
     <h1>组件目录与设计规范</h1>
-    <p class="subtitle">14 个标准组件，覆盖 5 个报告家族，A4 打印优化</p>
+    <p class="subtitle">14 个目录条目，接受 5 个 family 标签；A4 print styles 需在目标浏览器中验证</p>
     <div class="meta">
       <span>2026-08-31</span>
       <span>v1.0</span>
@@ -324,9 +324,9 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
       </tbody>
     </table>
   </div>
-  <!-- Footer pushed to bottom even with short content -->
+  <!-- Footer placement example; verify in the target browser/PDF -->
   <div class="footer-area">
-    <p>ACME Corp · 数据质量报告 · 2026-08-31</p>
+    <p>Example Client · 数据质量报告 · 2026-08-31</p>
   </div>
 </div>
 
@@ -364,7 +364,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
     </div>
   </div>
   <div class="footer">
-    <p>ACME Corp · 运费确认 · 2026-08-31</p>
+    <p>Example Client · 运费确认 · 2026-08-31</p>
   </div>
 </div>
 
@@ -386,7 +386,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
 
     <h2 id="checklist">上线确认清单</h2>
     <ul class="checklist">
-      <li class="done">运费规则已在 Shopify 后台配置</li>
+      <li class="done">运费规则已在运营后台配置</li>
       <li class="done">测试订单 3 笔，运费计算正确</li>
       <li class="done">大件商品已标记特殊运费标签</li>
       <li>客户确认邮件已发送</li>
@@ -394,7 +394,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
     </ul>
   </div>
   <div class="footer">
-    <p>ACME Corp · 上线确认 · 2026-08-31 · 请回复确认或提出修改意见</p>
+    <p>Example Client · 上线确认 · 2026-08-31 · 请回复确认或提出修改意见</p>
   </div>
 </div>
 
