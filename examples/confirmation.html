@@ -42,7 +42,7 @@ a:hover { text-decoration: underline; }
 /* Page container */
 .page { max-width: 960px; margin: 46px auto; padding: 0 34px 60px; }
 
-/* Report page = one A4 page */
+/* Report page = one logical authoring boundary; verify physical pagination */
 .report-page {
   position: relative;
   margin: 0 0 30px;
@@ -54,7 +54,7 @@ a:hover { text-decoration: underline; }
 }
 .report-page:last-child { margin-bottom: 0; }
 
-/* Flex layout for short pages: content fills middle, footer sticks to bottom */
+/* Flex layout for short pages: content fills middle; footer may move after content when space allows */
 .report-page.flex-col { display: flex; flex-direction: column; }
 .report-page.flex-col > .content-area { flex: 1; }
 .report-page.flex-col > .footer-area { margin-top: auto; }
@@ -148,10 +148,6 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
 /* Page label */
 .page-label { margin: 0 0 34px; padding-bottom: 14px; border-bottom: 1px solid var(--line-soft); color: var(--muted); font-size: 11px; font-weight: 650; letter-spacing: 0.18em; text-transform: uppercase; }
 
-/* Password overlay */
-#pw-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-#pw-overlay.hidden { display: none; }
-
 /* Responsive */
 @media (max-width: 860px) {
   .page { max-width: none; margin: 34px auto; padding: 0 16px 52px; }
@@ -177,7 +173,6 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
   tr { page-break-inside: avoid; }
   * { box-shadow: none !important; }
   a { border-bottom: 0; color: inherit; }
-  #pw-overlay { display: none !important; }
 }
 
 </style>
@@ -187,13 +182,13 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
 
   <div class="report-page cover">
     <div class="hero">
-      <p class="eyebrow">ACME Corp · 运营确认</p>
+      <p class="eyebrow">Example Client · 运营确认</p>
       <h1>运费规则变更确认</h1>
       <p class="subtitle">请确认以下运费规则调整，确认后将正式生效</p>
       <div class="meta">
         <span>2026-08-31</span>
         <span>v2.0</span>
-        <span>ACME Corp</span>
+        <span>Example Client</span>
       </div>
     </div>
   </div>
@@ -229,7 +224,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
       </section>
     </div>
     <div class="footer-area">
-      <div class="footer"><p>ACME Corp · 运费确认 · 2026-08-31 · 请回复确认或提出修改意见</p></div>
+      <div class="footer"><p>Example Client · 运费确认 · 2026-08-31 · 请回复确认或提出修改意见</p></div>
     </div>
   </div>
 

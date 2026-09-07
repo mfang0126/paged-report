@@ -42,7 +42,7 @@ a:hover { text-decoration: underline; }
 /* Page container */
 .page { max-width: 960px; margin: 46px auto; padding: 0 34px 60px; }
 
-/* Report page = one A4 page */
+/* Report page = one logical authoring boundary; verify physical pagination */
 .report-page {
   position: relative;
   margin: 0 0 30px;
@@ -54,7 +54,7 @@ a:hover { text-decoration: underline; }
 }
 .report-page:last-child { margin-bottom: 0; }
 
-/* Flex layout for short pages: content fills middle, footer sticks to bottom */
+/* Flex layout for short pages: content fills middle; footer may move after content when space allows */
 .report-page.flex-col { display: flex; flex-direction: column; }
 .report-page.flex-col > .content-area { flex: 1; }
 .report-page.flex-col > .footer-area { margin-top: auto; }
@@ -148,10 +148,6 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
 /* Page label */
 .page-label { margin: 0 0 34px; padding-bottom: 14px; border-bottom: 1px solid var(--line-soft); color: var(--muted); font-size: 11px; font-weight: 650; letter-spacing: 0.18em; text-transform: uppercase; }
 
-/* Password overlay */
-#pw-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-#pw-overlay.hidden { display: none; }
-
 /* Responsive */
 @media (max-width: 860px) {
   .page { max-width: none; margin: 34px auto; padding: 0 16px 52px; }
@@ -177,7 +173,6 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
   tr { page-break-inside: avoid; }
   * { box-shadow: none !important; }
   a { border-bottom: 0; color: inherit; }
-  #pw-overlay { display: none !important; }
 }
 
 </style>
@@ -187,13 +182,13 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
 
   <div class="report-page cover">
     <div class="hero">
-      <p class="eyebrow">ACME Corp · 服务报价</p>
+      <p class="eyebrow">Example Client · 服务报价</p>
       <h1>网站重建与数据整理方案</h1>
       <p class="subtitle">产品数据迁移 · 主题定制 · 上线部署 · 持续维护</p>
       <div class="meta">
         <span>2026-08-31</span>
         <span>v1.0</span>
-        <span>ACME Corp</span>
+        <span>Example Client</span>
       </div>
     </div>
     <nav class="toc">
@@ -219,7 +214,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
           </div>
           <div class="card">
             <h3>主题定制</h3>
-            <p>基于 Shopify OS 2.0 框架，定制品牌风格、导航结构和页面布局。</p>
+            <p>基于所选电商框架，定制品牌风格、导航结构和页面布局。</p>
           </div>
         </div>
         <div class="callout green">
@@ -228,7 +223,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
       </section>
     </div>
     <div class="footer-area">
-      <div class="footer"><p>ACME Corp · 服务报价 · 2026-08-31</p></div>
+      <div class="footer"><p>Example Client · 服务报价 · 2026-08-31</p></div>
     </div>
   </div>
 
@@ -253,7 +248,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
       </section>
     </div>
     <div class="footer-area">
-      <div class="footer"><p>ACME Corp · 服务报价 · 2026-08-31</p></div>
+      <div class="footer"><p>Example Client · 服务报价 · 2026-08-31</p></div>
     </div>
   </div>
 
@@ -298,7 +293,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
       </section>
     </div>
     <div class="footer-area">
-      <div class="footer"><p>ACME Corp · 服务报价 · 2026-08-31</p></div>
+      <div class="footer"><p>Example Client · 服务报价 · 2026-08-31</p></div>
     </div>
   </div>
 

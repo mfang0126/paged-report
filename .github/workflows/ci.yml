@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.12"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run unit tests
+        run: python -m unittest discover -v
+
+      - name: Compile generator and QA
+        run: python -m compileall -q generator qa
+
+      - name: Parse JSON metadata
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          for relative_path in ("schemas/report.schema.json", "release/manifest.json"):
+              path = Path(relative_path)
+              json.loads(path.read_text(encoding="utf-8"))
+              print(f"parsed {relative_path}")
+          PY
+
+      - name: Validate release allowlist and generic leakage
+        run: |
+          python - <<'PY'
+          import fnmatch
+          import json
+          import re
+          from pathlib import Path
+
+          root = Path.cwd()
+          manifest_path = root / "release" / "manifest.json"
+          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+          expected_states = {
+              "release_state": "development",
+              "stability": "review-pending",
+              "migration_state": "blocked",
+          }
+          for key, expected in expected_states.items():
+              actual = manifest.get(key)
+              if actual != expected:
+                  raise SystemExit(f"{key} must remain {expected!r}; got {actual!r}")
+
+          allowlist = manifest.get("allowlist")
+          if (
+              not isinstance(allowlist, list)
+              or not allowlist
+              or not all(isinstance(item, str) for item in allowlist)
+          ):
+              raise SystemExit("manifest allowlist must be a non-empty list of strings")
+          if len(set(allowlist)) != len(allowlist):
+              raise SystemExit("manifest allowlist contains duplicate paths")
+
+          exclusions = manifest.get("exclusions")
+          if not isinstance(exclusions, list):
+              raise SystemExit("manifest exclusions must be a list")
+          exclusion_patterns = []
+          for exclusion in exclusions:
+              if not isinstance(exclusion, dict) or not isinstance(exclusion.get("pattern"), str):
+                  raise SystemExit("each manifest exclusion must contain a string pattern")
+              exclusion_patterns.append(exclusion["pattern"])
+
+          for relative in allowlist:
+              relative_path = Path(relative)
+              if relative_path.is_absolute() or ".." in relative_path.parts:
+                  raise SystemExit(f"allowlist path must be relative: {relative}")
+              path = root / relative_path
+              if not path.is_file():
+                  raise SystemExit(f"allowlist path is missing: {relative}")
+              if any(fnmatch.fnmatch(relative, pattern) for pattern in exclusion_patterns):
+                  raise SystemExit(f"allowlist path is also excluded: {relative}")
+
+          forbidden_patterns = {
+              "ACME": re.compile(r"\bacme\b", re.IGNORECASE),
+              "Shopify": re.compile(r"\bshopify\b", re.IGNORECASE),
+              "BestenHome": re.compile(r"\bbesten\s*home\b", re.IGNORECASE),
+              "personal absolute path": re.compile(r"/(?:Users|home)/[^\s/]+", re.IGNORECASE),
+          }
+          generic_paths = [relative for relative in allowlist if not relative.startswith(".github/")]
+          leaks = []
+          for relative in generic_paths:
+              text = (root / relative).read_text(encoding="utf-8")
+              for label, pattern in forbidden_patterns.items():
+                  if pattern.search(text):
+                      leaks.append(f"{relative}: {label}")
+          if leaks:
+              raise SystemExit("generic leakage detected: " + ", ".join(leaks))
+
+          print(
+              f"allowlist={len(allowlist)} exclusions={len(exclusions)} "
+              "missing=0 generic_leaks=0"
+          )
+          PY
+
+      - name: Check diff whitespace
+        run: git diff --check

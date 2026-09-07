@@ -1,0 +1,37 @@
+# Python cache and test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local packaging/build output
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Local OS/editor state
+.DS_Store
+.vscode/
+.idea/
+
+# Ad-hoc report output; checked-in examples remain explicit
+report.html
+report.pdf
+*.local.html
+*.local.pdf
+
+# Local QA evidence; keep the QA scripts and contracts tracked
+qa/evidence/
+
+# Customer/domain-specific evidence; never commit to the generic public repo
+examples/*-internal*
+docs/reports/*/
+docs/reports/*-v2-*
+docs/reports/*-customer-*
+docs/reports/*-draft.*
+docs/reports/*-execution-*.md
+docs/reports/*-fanout-repair-plan-*.md
+docs/reports/*-qa-contract-*.md
