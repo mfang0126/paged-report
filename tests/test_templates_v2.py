@@ -171,6 +171,25 @@ class PlaybookTests(unittest.TestCase):
                 with self.subTest(src=src), self.assertRaises(ReportValidationError):
                     render_playbook(data, base_dir=Path(tmp))
 
+    def test_inline_images_are_not_lazy(self):
+        # every step image is a base64 data URI (remote URLs are rejected), so lazy loading saves nothing
+        # and late decoding shifts the page under the first search/TOC jump (v2.0.1 regression)
+        html = self.html()
+        self.assertIn('<img src="data:image/', html)
+        self.assertNotIn('loading="lazy"', html)
+
+    def test_search_bar_is_first_on_screen(self):
+        # v2.0.1: search renders before the cover (after any superseded banner) so it shows at scrollY=0
+        data = copy.deepcopy(self.data)
+        data["meta"]["superseded_by"] = "v3.html"
+        html = self.html(data)
+        order = [html.index(s) for s in (
+            'data-template="playbook"', '<div class="superseded"', '<div class="pb-search" role="search">',
+            'class="report-page cover doc-cover"', '<nav class="toc">', '<main class="report-page doc-main">',
+        )]
+        self.assertEqual(order, sorted(order))
+        self.assertRegex(html, r"\.pb-search \{\s*position: sticky; top: 0;")
+
     def test_text_is_escaped(self):
         data = copy.deepcopy(self.data)
         data["meta"]["title"] = XSS

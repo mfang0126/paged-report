@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented here.
 
+## [2.0.1] - 2026-11-24
+
+### Fixed
+
+- Playbook step images no longer carry `loading="lazy"`. Every step image is an inline base64 data URI, so lazy loading saved no request; late decoding grew the page during the first smooth scroll and the first search or contents jump landed off screen.
+- The playbook search bar now renders before the cover (right after any superseded banner), so it is visible at `scrollY=0` on desktop and mobile and stays sticky while scrolling. It is still hidden in print. On narrow screens it no longer bleeds 4px past the cover card edges.
+
 ## [2.0.0] - 2026-11-24
 
 ### Added

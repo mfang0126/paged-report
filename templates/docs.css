@@ -110,7 +110,7 @@
 
 @media (max-width: 860px) {
   .portal-grid { grid-template-columns: 1fr; }
-  .pb-search { margin-left: -4px; margin-right: -4px; padding: 10px 12px; flex-wrap: wrap; }
+  .pb-search { padding: 10px 12px; }
   .pb-search label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .pb-search input { flex: 1 1 0; }
   .pb-search input, .pb-print { min-height: 44px; }
