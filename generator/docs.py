@@ -229,7 +229,7 @@ def _render_step(step: Mapping[str, Any], step_id: str, number: int, labels: Map
     if step["image"]:
         image = step["image"]
         caption = f'<figcaption>{_escape(image["caption"])}</figcaption>' if image["caption"] else ""
-        parts.append(f'<figure><img src="{_escape(image["src"])}" alt="{_escape(image["alt"])}" loading="lazy">{caption}</figure>')
+        parts.append(f'<figure><img src="{_escape(image["src"])}" alt="{_escape(image["alt"])}">{caption}</figure>')
     if step["warning"]:
         parts.append(f'<div class="callout red pb-warning"><strong>{labels["warning"]}</strong>{_escape(step["warning"])}</div>')
     if step["mistakes"]:
@@ -251,6 +251,13 @@ def render_playbook(data: Mapping[str, Any], base_dir: Path | None = None) -> st
         "<body>",
         '<div class="page doc" data-template="playbook">',
         _superseded_banner(meta),
+        # search sits before the cover so it is on the first screen and sticks from scrollY=0
+        '<div class="pb-search" role="search">',
+        f'<label for="pb-q">{labels["search"]}</label>',
+        f'<input id="pb-q" type="search" placeholder="{labels["search_hint"]}" autocomplete="off">',
+        f'<button type="button" class="pb-print">{labels["print"]}</button>',
+        f'<ul id="pb-results" class="pb-results" hidden data-empty="{labels["no_hit"]}"></ul>',
+        "</div>",
         '<div class="report-page cover doc-cover">',
         *_hero(meta),
         f'<h2 class="pb-intent-title">{labels["intent"]}</h2>',
@@ -265,17 +272,7 @@ def render_playbook(data: Mapping[str, Any], base_dir: Path | None = None) -> st
             f'<li><a href="#{_escape(s["id"])}">{_escape(s["title"])}</a></li>' for s in playbook["sections"]
         )
         parts.append("</ol></nav>")
-    parts.extend(
-        [
-            "</div>",
-            '<div class="pb-search" role="search">',
-            f'<label for="pb-q">{labels["search"]}</label>',
-            f'<input id="pb-q" type="search" placeholder="{labels["search_hint"]}" autocomplete="off">',
-            f'<button type="button" class="pb-print">{labels["print"]}</button>',
-            f'<ul id="pb-results" class="pb-results" hidden data-empty="{labels["no_hit"]}"></ul>',
-            "</div>",
-        ]
-    )
+    parts.append("</div>")
     if playbook["toc"]:  # wide-screen side rail; the cover TOC above stays the printed one
         parts.append(f'<nav class="pb-rail" aria-label="{labels["contents"]}"><p>{labels["contents"]}</p><ol>')
         parts.extend(

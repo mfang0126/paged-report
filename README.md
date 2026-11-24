@@ -71,7 +71,7 @@ The optional data-appendix and package-delivery manifest are currently proposed 
 
 The generic release boundary is recorded in [`release/manifest.json`](release/manifest.json). It includes the standard-library renderer, schema, templates, documentation, and sanitized generic HTML/data examples. Customer/domain fixtures, QA evidence, local state, tests, and development-only material are explicit exclusions rather than generic package content.
 
-The current manifest is marked `released` / `stable` / `ready` (`v2.0.0`), covering the unified `report`, `playbook`, and `portal` single-file client templates.
+The current manifest is marked `released` / `stable` / `ready` (`v2.0.1`), covering the unified `report`, `playbook`, and `portal` single-file client templates.
 
 The existing PDF and PNG previews remain in the checkout as visual evidence, but are excluded from the generic release until regenerated from sanitized fixtures. The manifest is the source of truth for what may be packaged.
 

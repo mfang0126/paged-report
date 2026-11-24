@@ -1,7 +1,7 @@
 ---
 name: paged-report
 description: "Generate client delivery HTML (report, playbook, portal) from one JSON file and one command: A4 print, noindex, offline single file. Triggers: client report, 发给客户, 报价, 进度汇报, 确认函, 操作手册, 后台教程, 文档入口."
-version: 2.0.0
+version: 2.0.1
 status: development
 stability: stable
 author: Ming Fang
