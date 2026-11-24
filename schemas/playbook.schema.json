@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/mfang0126/paged-report/main/schemas/playbook.schema.json",
+  "title": "Paged Report playbook input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "template",
+    "meta",
+    "intent",
+    "sections"
+  ],
+  "properties": {
+    "template": {
+      "const": "playbook"
+    },
+    "meta": {
+      "$ref": "report.schema.json#/$defs/meta"
+    },
+    "intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "problem",
+        "outcome"
+      ],
+      "properties": {
+        "problem": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?![\\u0009-\\u000d\\u001c-\\u001f\\u0020\\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]*$)[\\s\\S]+$"
+        },
+        "outcome": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?![\\u0009-\\u000d\\u001c-\\u001f\\u0020\\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]*$)[\\s\\S]+$"
+        }
+      }
+    },
+    "toc": {
+      "type": "boolean"
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/section"
+      }
+    }
+  },
+  "$defs": {
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable anchor; defaults to a slug of title."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?![\\u0009-\\u000d\\u001c-\\u001f\\u0020\\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]*$)[\\s\\S]+$"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?![\\u0009-\\u000d\\u001c-\\u001f\\u0020\\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]*$)[\\s\\S]+$"
+          },
+          "description": "Synonyms and intent words for the offline search bar."
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "report.schema.json#/$defs/component"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/step"
+          }
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?![\\u0009-\\u000d\\u001c-\\u001f\\u0020\\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]*$)[\\s\\S]+$"
+        },
+        "path": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string",
+          "description": "Blank lines split paragraphs."
+        },
+        "image": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "src",
+            "alt"
+          ],
+          "properties": {
+            "src": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?![\\u0009-\\u000d\\u001c-\\u001f\\u0020\\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]*$)[\\s\\S]+$",
+              "description": "Local .png/.jpg/.gif/.webp path relative to the JSON file (inlined as base64) or a data:image base64 URI."
+            },
+            "alt": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?![\\u0009-\\u000d\\u001c-\\u001f\\u0020\\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]*$)[\\s\\S]+$"
+            },
+            "caption": {
+              "type": "string"
+            }
+          }
+        },
+        "warning": {
+          "type": "string"
+        },
+        "mistakes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?![\\u0009-\\u000d\\u001c-\\u001f\\u0020\\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]*$)[\\s\\S]+$"
+          }
+        },
+        "rollback": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

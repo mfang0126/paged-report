@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/mfang0126/paged-report/main/schemas/portal.schema.json",
+  "title": "Paged Report portal input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "template",
+    "meta",
+    "docs"
+  ],
+  "properties": {
+    "template": {
+      "const": "portal"
+    },
+    "meta": {
+      "$ref": "report.schema.json#/$defs/meta"
+    },
+    "intro": {
+      "type": "string"
+    },
+    "archive_open": {
+      "type": "boolean"
+    },
+    "docs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "title",
+          "href"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?![\\u0009-\\u000d\\u001c-\\u001f\\u0020\\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]*$)[\\s\\S]+$"
+          },
+          "href": {
+            "$ref": "report.schema.json#/$defs/href"
+          },
+          "type": {
+            "enum": [
+              "report",
+              "playbook",
+              "data",
+              "other"
+            ],
+            "default": "report"
+          },
+          "status": {
+            "enum": [
+              "current",
+              "draft",
+              "superseded",
+              "archived"
+            ],
+            "default": "current"
+          },
+          "updated": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

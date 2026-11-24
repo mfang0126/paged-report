@@ -2,6 +2,30 @@
 
 All notable changes to this project are documented here.
 
+## [2.0.0] - 2026-11-24
+
+### Added
+
+- `playbook` template: business-intent opener, stable section anchors (explicit `id` or deterministic slug), one card per step (path, body, screenshot, warning, common mistakes, rollback), offline search bar with keyword/synonym matching, jump and highlight; search hidden in print.
+- `portal` template: per-client document index grouped by status (current, draft, collapsed history), status and type badges, update dates; no script and no client-side password gate.
+- `schemas/playbook.schema.json`, `schemas/portal.schema.json`, `templates/docs.css`, playbook/portal examples and `tests/test_templates_v2.py`.
+- Shared `meta.robots` (default `noindex, nofollow` on every template) and `meta.superseded_by` (banner linking an old version to the current one).
+- One CLI for all templates: `python3 -m generator.paged_report input.json -o out.html` dispatches on the `template` key (`report` when omitted). Local step images are inlined as base64.
+
+### Changed
+
+- Every output now includes a viewport meta tag and the robots meta tag.
+- Narrow screens (≤860px) let table cells and tags wrap, and `.page` breaks long unbroken words, so 390px viewports have no horizontal overflow.
+- Playbook/portal CSS goes through the same `_safe_css` check as reports; links starting with `//` or `\` are rejected; local step images must stay inside the input JSON folder.
+- Collapsed portal history is included when printing.
+- PDF guidance now uses native browser print, Chrome headless or Playwright.
+- `examples/confirmation-generated.html` regenerated with the v2 head.
+
+### Compatibility
+
+- v1 report JSON renders unchanged apart from the added head meta tags; the v1 test suite passes unmodified.
+- `qa/paged_report_qa.py` now accepts exactly one inline `<script>` in playbook output (the offline search bar); any other script, or a script in report/portal output, still fails self-containment.
+
 ## [1.2.1] - 2026-09-07 (unreleased; development/review-pending)
 
 ### Added

@@ -62,6 +62,7 @@ class _HTMLProbe(html.parser.HTMLParser):
         self.report_page_count = 0
         self.style_blocks = 0
         self.script_tags = 0
+        self.playbook = False
         self.link_tags = 0
         self.resource_refs: list[dict[str, str]] = []
         self.css_chunks: list[str] = []
@@ -76,6 +77,8 @@ class _HTMLProbe(html.parser.HTMLParser):
         attr_map = {name.lower(): (value or "") for name, value in attrs}
         if tag == "html":
             self.html_attrs.append(attr_map)
+        if attr_map.get("data-template") == "playbook":
+            self.playbook = True
         if "report-page" in set(attr_map.get("class", "").split()):
             self.report_page_count += 1
         if tag == "style":
@@ -162,7 +165,9 @@ def _html_evidence(path: Path) -> dict[str, Any]:
         containment_violations.append(
             {"kind": "link-element", "message": "link elements are external document dependencies"}
         )
-    if probe.script_tags:
+    # A v2 playbook carries exactly one inline search script; any src= is caught as a resource reference.
+    allowed_scripts = 1 if probe.playbook else 0
+    if probe.script_tags > allowed_scripts:
         containment_violations.append(
             {"kind": "script-element", "message": "script elements are not part of a static report"}
         )

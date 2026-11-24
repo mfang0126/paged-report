@@ -1,0 +1,52 @@
+{
+  "template": "portal",
+  "meta": {
+    "language": "zh-CN",
+    "title": "Example Store 交付文档",
+    "client": "Example Store",
+    "category": "文档入口",
+    "subtitle": "所有交付文档的统一入口，请以「当前有效」版本为准",
+    "date": "2026-11-24"
+  },
+  "intro": "下方列出当前有效的报告、操作手册和数据表。旧版本保留在「历史版本」中，原链接继续可用。",
+  "docs": [
+    {
+      "title": "订单退款与改价操作手册",
+      "href": "playbook-refund-v1.html",
+      "type": "playbook",
+      "status": "current",
+      "updated": "2026-11-24",
+      "summary": "全额退款、部分退款和订单改价的后台操作步骤。"
+    },
+    {
+      "title": "运费规则变更确认",
+      "href": "shipping-confirmation-v2.html",
+      "type": "report",
+      "status": "current",
+      "updated": "2026-11-20",
+      "summary": "运费门槛与地区规则调整，需要确认后生效。"
+    },
+    {
+      "title": "商品资料核对表",
+      "href": "product-data-v1.xlsx",
+      "type": "data",
+      "status": "draft",
+      "updated": "2026-11-22",
+      "summary": "待补充的商品资料明细，填写说明见表内第一页。"
+    },
+    {
+      "title": "运费规则变更确认（旧版）",
+      "href": "shipping-confirmation-v1.html",
+      "type": "report",
+      "status": "superseded",
+      "updated": "2026-08-31"
+    },
+    {
+      "title": "项目启动方案",
+      "href": "proposal-v1.html",
+      "type": "report",
+      "status": "archived",
+      "updated": "2026-07-10"
+    }
+  ]
+}

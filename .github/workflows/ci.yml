@@ -36,7 +36,7 @@ jobs:
           import json
           from pathlib import Path
 
-          for relative_path in ("schemas/report.schema.json", "release/manifest.json"):
+          for relative_path in ("schemas/report.schema.json", "schemas/playbook.schema.json", "schemas/portal.schema.json", "release/manifest.json"):
               path = Path(relative_path)
               json.loads(path.read_text(encoding="utf-8"))
               print(f"parsed {relative_path}")
@@ -55,9 +55,9 @@ jobs:
           manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
           expected_states = {
-              "release_state": "development",
-              "stability": "review-pending",
-              "migration_state": "blocked",
+              "release_state": "released",
+              "stability": "stable",
+              "migration_state": "ready",
           }
           for key, expected in expected_states.items():
               actual = manifest.get(key)

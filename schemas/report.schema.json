@@ -10,6 +10,7 @@
       "type": "string",
       "enum": ["proposal", "data-audit", "progress", "confirmation", "handoff"]
     },
+    "template": {"const": "report"},
     "toc": {"type": "boolean"},
     "meta": {
       "$ref": "#/$defs/meta"
@@ -21,6 +22,16 @@
     }
   },
   "$defs": {
+    "href": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Relative path, #fragment or http(s) URL; other schemes are rejected by the renderer.",
+      "not": {"anyOf": [
+        {"pattern": "^[\\u0000-\\u0020]*(?![hH][tT][tT][pP][sS]?:)[A-Za-z][A-Za-z0-9+.\\u0000-\\u0020\\u007f-]*:"},
+        {"pattern": "^[\\u0000-\\u0020]*[/\\\\][/\\\\]"},
+        {"pattern": "^[\\u0000-\\u0020]*\\\\"}
+      ]}
+    },
     "meta": {
       "type": "object",
       "additionalProperties": false,
@@ -34,7 +45,9 @@
         "date": {"type": "string"},
         "version": {"type": "string"},
         "project": {"type": "string"},
-        "footer": {"type": "string"}
+        "footer": {"type": "string"},
+        "robots": {"type": "string", "minLength": 1, "pattern": "^(?![\\u0009-\\u000d\\u001c-\\u001f\\u0020\\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]*$)[\\s\\S]+$", "description": "Defaults to \"noindex, nofollow\" when omitted."},
+        "superseded_by": {"$ref": "#/$defs/href", "description": "Link to the newer version; renders a superseded banner."}
       }
     },
     "page": {

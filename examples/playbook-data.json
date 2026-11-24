@@ -1,0 +1,106 @@
+{
+  "template": "playbook",
+  "meta": {
+    "language": "zh-CN",
+    "title": "订单退款与改价操作手册",
+    "client": "Example Store",
+    "category": "后台操作手册",
+    "subtitle": "适用于店铺后台的日常退款、部分退款和订单改价",
+    "date": "2026-11-24",
+    "version": "v1.0"
+  },
+  "intent": {
+    "problem": "客户申请退款或订单金额需要调整时，后台入口分散，操作顺序不对容易重复退款或漏发通知。",
+    "outcome": "按本手册操作后，可以在后台独立完成全额退款、部分退款和改价，并在需要时撤回操作。"
+  },
+  "sections": [
+    {
+      "id": "full-refund",
+      "title": "全额退款",
+      "summary": "订单尚未发货、客户取消整单时使用。",
+      "keywords": ["退款", "退钱", "取消订单", "refund", "cancel"],
+      "steps": [
+        {
+          "title": "打开需要退款的订单",
+          "path": "Orders（订单） → 选择订单号",
+          "body": "在订单列表中按订单号搜索，进入订单详情页。",
+          "image": {
+            "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAeAAAACgCAIAAABbmSgaAAACP0lEQVR42u3UsQmAMBCG0Wxik3lsLQPZ28rGHWLAGQIpzvjg1Vcc/F/a9gJAQMkLAAQaAIEGEGgABBpAoAEQaAAEGkCgARBoAIEGQKABEGgAgQZAoAEEGgCBBhBoAAQaAIEGEGgABBpAoAEQaAAEGkCgARBogMUC3Z4OQEACDSDQAAg0gEADINAAAg2AQAMg0AACDYBAAwg0AAINgEADCDQAAg0g0AAINIBAAyDQAAg0gEADINAAAj3ivG5glAwh0CDQCDQg0Ag0CDQCLdAg0Ag0CDQINAg0Ag0INAINAo1ACzQINAINAo1ACzQINAINCDQCDQKNQBsbCDQCDQKNQAs0CDQCDQINAg0Czb8CDYBAAwg0AAINgEADCDQAAg0g0AAINIBAAyDQAAg0gEADINAAAg2AQAMg0AACDYBAAwg0AAININATb+V68C0GAAKNQAMCjUCDQAu0QAMCjUCDQAu0QAMCjUADAo1Ag0BLnkADAo1Ag0ALtEADAo1AAwKNQINAI9CAQCPQINACLdCAQCPQINACLdCAQCPQgEAj0CDQAi3QgEAj0CDQAi3QgEAj0IBAI9Ag0Ag0INAINAi0QAs0INAINAi0QAs0INAINCDQCDQItEALNCDQCDQItEALNLBWoAEQaACBBkCgARBoAIEGQKABBBoAgQYQaAAEGgCBBhBoAAQaQKABEGgABBpAoAEQaACBBkCgAQTaCwAEGgCBBhBoAAQaQKABEGgABBpAoAEQaACBBkCgARBogMhe7ANpWxuGFMoAAAAASUVORK5CYII=",
+            "alt": "订单详情页示意图，顶部为导航栏，下方为订单信息",
+            "caption": "示意图：订单详情页"
+          }
+        },
+        {
+          "title": "点击 Refund（退款）并确认金额",
+          "path": "订单详情页右上角 → Refund（退款）",
+          "body": "核对退款金额与原支付金额一致，勾选需要退回库存的商品。",
+          "warning": "退款提交后款项立即退回原支付方式，无法在后台撤销，提交前请再次核对金额。",
+          "mistakes": [
+            "同一订单重复点击 Refund（退款），导致退款两次。",
+            "未勾选退回库存，造成库存数量偏少。"
+          ],
+          "rollback": "如果误退款，需要联系客户重新付款，并在订单备注中记录原因。"
+        }
+      ]
+    },
+    {
+      "id": "partial-refund",
+      "title": "部分退款",
+      "summary": "订单中个别商品缺货或破损时使用。",
+      "keywords": ["部分退款", "缺货", "破损", "补偿", "partial refund"],
+      "steps": [
+        {
+          "title": "选择需要退款的商品与数量",
+          "path": "订单详情页 → Refund（退款） → 修改商品数量",
+          "body": "只填写需要退款的商品数量，运费按实际情况填写。",
+          "mistakes": ["把运费一并退回，但客户仍收到其余商品。"]
+        },
+        {
+          "title": "填写退款原因并通知客户",
+          "body": "原因会显示在客户收到的退款邮件中，用正式书面语填写。",
+          "rollback": "退款原因可在订单备注中补充说明，邮件发出后无法修改。"
+        }
+      ]
+    },
+    {
+      "id": "edit-price",
+      "title": "订单改价",
+      "summary": "订单付款前需要调整商品价格或折扣时使用。",
+      "keywords": ["改价", "修改价格", "折扣", "优惠", "edit order", "discount"],
+      "components": [
+        {
+          "type": "table",
+          "columns": ["情况", "做法"],
+          "rows": [
+            ["客户尚未付款", "直接编辑订单商品价格"],
+            ["客户已经付款", "改用部分退款处理差价"]
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "title": "编辑订单商品",
+          "path": "订单详情页 → Edit（编辑）",
+          "body": "修改商品价格或添加折扣后，点击 Update order（更新订单）。",
+          "warning": "已付款订单改价不会自动退款，差价需要按「部分退款」一节处理。",
+          "rollback": "在发送账单前可以再次进入 Edit（编辑）恢复原价。"
+        }
+      ]
+    },
+    {
+      "id": "checklist",
+      "title": "完成检查清单",
+      "keywords": ["检查", "核对", "清单"],
+      "components": [
+        {
+          "type": "checklist",
+          "items": [
+            {"text": "退款金额与客户申请一致"},
+            {"text": "库存数量已核对"},
+            {"text": "订单备注已记录原因"}
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -26,6 +26,11 @@ COMPONENTS = {
     "tag",
 }
 _MISSING = object()
+META_FIELDS = {
+    "language", "title", "client", "category", "subtitle", "date",
+    "version", "project", "footer", "robots", "superseded_by",
+}
+DEFAULT_ROBOTS = "noindex, nofollow"
 
 
 class ReportValidationError(ValueError):
@@ -90,6 +95,72 @@ def _slug(value: str, fallback: str) -> str:
     return slug or fallback
 
 
+def _safe_href(value: Any, field: str) -> str:
+    """Accept relative links, fragments and http(s) URLs; reject script-capable schemes."""
+    href = _required_text(value, field).strip()
+    # Browsers drop ASCII control characters and whitespace before reading a scheme.
+    probe = re.sub(r"[\x00-\x20\x7f]+", "", href).lower()
+    scheme = re.match(r"([a-z][a-z0-9+.-]*):", probe)
+    if (scheme and scheme.group(1) not in {"http", "https"}) or re.match(r"[/\\][/\\]|\\", probe):
+        raise ReportValidationError(f"{field} must be a relative path, #fragment or http(s) URL")
+    return href
+
+
+def _normalize_meta(meta_value: Any) -> dict[str, Any]:
+    """Shared meta contract for report, playbook and portal templates."""
+    meta = _mapping(meta_value, "meta")
+    _reject_unknown(meta, META_FIELDS, "meta")
+    title = _required_text(meta.get("title", _MISSING), "meta.title")
+    language = _optional_text(meta.get("language", _MISSING), "meta.language", "zh-CN")
+    if not re.fullmatch(r"[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*", language):
+        raise ReportValidationError("meta.language must be a valid language tag")
+    normalized = {"language": language, "title": title}
+    for key in ("client", "category", "subtitle", "date", "version", "project", "footer"):
+        normalized[key] = _optional_text(meta.get(key, _MISSING), f"meta.{key}")
+    normalized["robots"] = (
+        _required_text(meta["robots"], "meta.robots") if "robots" in meta else DEFAULT_ROBOTS
+    )
+    normalized["superseded_by"] = (
+        _safe_href(meta["superseded_by"], "meta.superseded_by") if "superseded_by" in meta else ""
+    )
+    if not normalized["footer"]:
+        normalized["footer"] = " · ".join(
+            part for part in (normalized["client"], normalized["category"], normalized["date"]) if part
+        )
+    return normalized
+
+
+def _is_english(meta: Mapping[str, Any]) -> bool:
+    return meta["language"].lower().startswith("en")
+
+
+def _head(meta: Mapping[str, Any], css: str) -> list[str]:
+    return [
+        "<!DOCTYPE html>",
+        f'<html lang="{_escape(meta["language"])}">',
+        "<head>",
+        '<meta charset="UTF-8">',
+        '<meta name="viewport" content="width=device-width, initial-scale=1">',
+        f'<meta name="robots" content="{_escape(meta["robots"])}">',
+        f'<title>{_escape(meta["title"])}</title>',
+        "<style>",
+        css,
+        "</style>",
+        "</head>",
+    ]
+
+
+def _superseded_banner(meta: Mapping[str, Any]) -> str:
+    if not meta["superseded_by"]:
+        return ""
+    href = _escape(meta["superseded_by"])
+    if _is_english(meta):
+        text = f'This version has been superseded. <a href="{href}">Open the current version</a>.'
+    else:
+        text = f'本文档已有新版本，当前页面仅供查阅历史。<a href="{href}">打开最新版本</a>'
+    return f'<div class="superseded" role="note">{text}</div>'
+
+
 def _percentage(value: Any, field: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ReportValidationError(f"{field} must be a number from 0 to 100")
@@ -108,23 +179,16 @@ def _boolean(value: Any, field: str, default: bool = False) -> bool:
 
 def _normalize(data: Mapping[str, Any]) -> dict[str, Any]:
     data = _mapping(data, "report")
-    _reject_unknown(data, {"family", "toc", "meta", "pages"}, "report")
+    _reject_unknown(data, {"template", "family", "toc", "meta", "pages"}, "report")
+    if "template" in data and data["template"] != "report":
+        raise ReportValidationError('template must be "report" for the report renderer')
     family = _required_text(data.get("family", _MISSING), "family")
     if family not in FAMILIES:
         raise ReportValidationError(
             f"family must be one of {', '.join(sorted(FAMILIES))}"
         )
 
-    meta = _mapping(data.get("meta"), "meta")
-    _reject_unknown(
-        meta,
-        {"language", "title", "client", "category", "subtitle", "date", "version", "project", "footer"},
-        "meta",
-    )
-    title = _required_text(meta.get("title", _MISSING), "meta.title")
-    language = _optional_text(meta.get("language", _MISSING), "meta.language", "zh-CN")
-    if not re.fullmatch(r"[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*", language):
-        raise ReportValidationError("meta.language must be a valid language tag")
+    normalized_meta = _normalize_meta(data.get("meta"))
 
     pages = _list(data.get("pages"), "pages")
     if not pages:
@@ -181,29 +245,6 @@ def _normalize(data: Mapping[str, Any]) -> dict[str, Any]:
                 "sections": normalized_sections,
             }
         )
-
-    normalized_meta = {
-        "language": language,
-        "title": title,
-        "client": _optional_text(meta.get("client", _MISSING), "meta.client"),
-        "category": _optional_text(meta.get("category", _MISSING), "meta.category"),
-        "subtitle": _optional_text(meta.get("subtitle", _MISSING), "meta.subtitle"),
-        "date": _optional_text(meta.get("date", _MISSING), "meta.date"),
-        "version": _optional_text(meta.get("version", _MISSING), "meta.version"),
-        "project": _optional_text(meta.get("project", _MISSING), "meta.project"),
-        "footer": _optional_text(meta.get("footer", _MISSING), "meta.footer"),
-    }
-    if not normalized_meta["footer"]:
-        footer_parts = [
-            part
-            for part in (
-                normalized_meta["client"],
-                normalized_meta["category"],
-                normalized_meta["date"],
-            )
-            if part
-        ]
-        normalized_meta["footer"] = " · ".join(footer_parts)
 
     return {
         "family": family,
@@ -507,17 +548,10 @@ def render_report(data: Mapping[str, Any], css: str | None = None) -> str:
         if value
     ]
     parts = [
-        "<!DOCTYPE html>",
-        f'<html lang="{_escape(meta["language"])}">',
-        "<head>",
-        '<meta charset="UTF-8">',
-        f'<title>{_escape(meta["title"])}</title>',
-        "<style>",
-        css,
-        "</style>",
-        "</head>",
+        *_head(meta, css),
         "<body>",
         f'<div class="page" data-family="{report["family"]}">',
+        _superseded_banner(meta),
         '<div class="report-page cover">',
         '<div class="hero">',
         f'<p class="eyebrow">{_escape(eyebrow)}</p>',
@@ -532,7 +566,7 @@ def render_report(data: Mapping[str, Any], css: str | None = None) -> str:
     parts.append("</div>")
 
     if report["toc"] and sections:
-        toc_heading = "Contents" if meta["language"].lower().startswith("en") else "目录"
+        toc_heading = "Contents" if _is_english(meta) else "目录"
         parts.extend([f'<nav class="toc"><h2>{toc_heading}</h2><ol>'])
         parts.extend(
             f'<li><a href="#{_escape(section["id"])}">{_escape(section["title"])}</a></li>'
@@ -564,14 +598,28 @@ def render_report(data: Mapping[str, Any], css: str | None = None) -> str:
     return "".join(parts)
 
 
+def render(data: Mapping[str, Any], base_dir: Path | None = None) -> str:
+    """Render any template by its ``template`` key (default ``report``)."""
+    template = data.get("template", "report") if isinstance(data, Mapping) else "report"
+    if template == "report":
+        return render_report(data)
+    from .docs import render_playbook, render_portal  # local import: docs imports this module
+
+    if template == "playbook":
+        return render_playbook(data, base_dir=base_dir)
+    if template == "portal":
+        return render_portal(data)
+    raise ReportValidationError("template must be one of playbook, portal, report")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("input", type=Path, help="JSON report data")
+    parser.add_argument("input", type=Path, help="JSON data (template: report | playbook | portal)")
     parser.add_argument("-o", "--output", required=True, type=Path, help="HTML output path")
     args = parser.parse_args(argv)
     try:
         data = json.loads(args.input.read_text(encoding="utf-8"))
-        rendered = render_report(data)
+        rendered = render(data, base_dir=args.input.resolve().parent)
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(rendered, encoding="utf-8")
     except (OSError, json.JSONDecodeError, ReportValidationError) as exc:

@@ -1,9 +1,9 @@
 ---
 name: paged-report
-description: "Generate client HTML reports with A4 print via WebBridge. Triggers: client report, 发给客户, 报价, 进度汇报, 确认函."
-version: 1.2.1
+description: "Generate client delivery HTML (report, playbook, portal) from one JSON file and one command: A4 print, noindex, offline single file. Triggers: client report, 发给客户, 报价, 进度汇报, 确认函, 操作手册, 后台教程, 文档入口."
+version: 2.0.0
 status: development
-stability: review-pending
+stability: stable
 author: Ming Fang
 license: MIT
 platforms: [linux, macos, windows]
@@ -18,17 +18,82 @@ Generate professional client-facing HTML reports with A4-oriented print styles a
 
 ## Trigger
 
-Any of: "client report", "send report to client", "发给客户", "报价方案", "进度汇报", "确认函", "数据报告", "导入报告", "make a report for", "生成报告", "paged report"
+Any of: "client report", "send report to client", "发给客户", "报价方案", "进度汇报", "确认函", "数据报告", "导入报告", "make a report for", "生成报告", "paged report", "操作手册", "后台教程", "客户手册", "documentation", "playbook", "文档入口", "portal"
 
-## How it works
+## AI calling convention (v2, mandatory)
+
+Client delivery documents are written as **one JSON file + one command**. Do not hand-write HTML or CSS, and do not copy an old HTML file and edit it.
+
+1. Pick the template:
+   - `report`: report, problem explanation, quote confirmation, delivery summary (v1 JSON, unchanged; `template` key optional)
+   - `playbook`: admin how-to, client operations manual, documentation (intent opener, anchored sections, one card per step, offline search)
+   - `portal`: one clean entry page per client listing documents by status (current first, history collapsed)
+2. Write the JSON against `schemas/report.schema.json`, `schemas/playbook.schema.json` or `schemas/portal.schema.json`. Start from `examples/confirmation-data.json`, `examples/playbook-data.json` or `examples/portal-data.json`.
+3. Render from the repository root (the same command for all three):
+   `python3 -m generator.paged_report input.json --output out.html`
+4. Open the file to check it, then export a PDF if needed (see "PDF export (native A4 print)").
+
+Every output is one self-contained HTML file (inline CSS, local images inlined as base64, no CDN, works offline by double-click) and carries `<meta name="robots" content="noindex, nofollow">` unless `meta.robots` overrides it. When a document is replaced, keep the old file and URL and re-render it with `meta.superseded_by` pointing at the new file: the old page then shows a banner linking to the current version instead of returning 404.
+
+Shared `meta` fields for all templates: `language`, `title` (required), `client`, `category`, `subtitle`, `date`, `version`, `project`, `footer`, `robots`, `superseded_by`. Links (`superseded_by`, portal `href`) accept relative paths, `#fragments` and http(s) URLs only.
+
+### Playbook minimal shape
+
+```json
+{
+  "template": "playbook",
+  "meta": {"title": "订单退款操作手册", "client": "客户名称", "date": "2026-11-24"},
+  "intent": {"problem": "要解决的问题", "outcome": "完成后的效果"},
+  "sections": [
+    {
+      "id": "refund",
+      "title": "全额退款",
+      "summary": "什么时候用这一节",
+      "keywords": ["退款", "退钱", "refund"],
+      "steps": [
+        {
+          "title": "点击 Refund（退款）",
+          "path": "Orders（订单） → 订单详情 → Refund（退款）",
+          "body": "一步一个动作。空行分段。",
+          "image": {"src": "shots/refund.png", "alt": "退款按钮位置", "caption": "截图：订单详情页"},
+          "warning": "高风险提示",
+          "mistakes": ["常见错误一"],
+          "rollback": "如何撤回"
+        }
+      ]
+    }
+  ]
+}
+```
+
+- Section anchors are `id` or a deterministic slug of `title`; step anchors are `<section-id>-step-<n>`. Link to them as `playbook.html#refund`.
+- `keywords` feed the search bar: add synonyms and intent words a client would type. Search matches section text plus keywords; all terms must match; Enter jumps to the first hit and highlights it. The search bar is hidden in print.
+- Sections may also hold any report `components` (table, checklist, callout, ...).
+- `image.src` is a local .png/.jpg/.gif/.webp path relative to the JSON file; the renderer inlines it. Remote image URLs are rejected.
+
+### Portal minimal shape
+
+```json
+{
+  "template": "portal",
+  "meta": {"title": "客户名称 交付文档", "client": "客户名称"},
+  "intro": "请以「当前有效」版本为准。",
+  "docs": [
+    {"title": "退款操作手册", "href": "playbook-refund-v1.html", "type": "playbook", "status": "current", "updated": "2026-11-24"},
+    {"title": "运费确认（旧版）", "href": "shipping-v1.html", "type": "report", "status": "superseded"}
+  ]
+}
+```
+
+`type`: report | playbook | data | other. `status`: current | draft | superseded | archived. Current and draft get their own groups; superseded and archived go into a collapsed history block (`"archive_open": true` expands it). The portal has no script and no password field: access control belongs to the hosting layer, never to page JavaScript.
+
+## How it works (report)
 
 1. Identify template family + client/project name
 2. Put report content in the structured JSON contract below
 3. Render HTML from the paged-report repository root with `python3 -m generator.paged_report input.json --output report.html`
-4. Kimi WebBridge (recommended for interactive/PDF preview): `navigate(http://127.0.0.1:...)` + `save_as_pdf(paper_format: "a4")`; verify the resulting PDF
+4. Export a PDF with the browser print dialog, Chrome headless or Playwright (see "PDF export (native A4 print)"); verify the resulting PDF
 5. Optional: `artifact-delivery` to publish a reviewed preview
-
-**One reusable tab**: `session: "report-gen"` — navigate → save_as_pdf → repeat.
 
 ## Structured JSON generator
 
@@ -241,22 +306,19 @@ Rules:
 <hr>
 ```
 
-## PDF via WebBridge
+## PDF export (native A4 print)
 
-```bash
-# Serve /tmp/report.html from a temporary localhost HTTP server first
-python3 -m http.server 8765 --bind 127.0.0.1 --directory /tmp
+The CSS sets `@page { size: A4; margin: 18mm 16mm }` and hides screen-only controls (the playbook search bar) in print. Any Chromium print path gives a clean A4 PDF:
 
-# Navigate to the served file (reuses same tab)
-curl -s -X POST http://127.0.0.1:10086/command \
-  -H 'Content-Type: application/json' \
-  -d '{"action":"navigate","args":{"url":"http://127.0.0.1:8765/report.html"},"session":"report-gen"}'
+- Manual: open the HTML, press `Cmd/Ctrl + P`, choose A4, Save as PDF. Playbooks also have a "打印 / 保存 PDF" button.
+- Chrome headless:
+  ```bash
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --no-pdf-header-footer \
+    --print-to-pdf=/tmp/report.pdf file:///tmp/report.html
+  ```
+- Playwright (repeatable checks): `page.goto(file_url)` then `page.pdf(path=..., format="A4", prefer_css_page_size=True, print_background=True)`.
 
-# Save A4 PDF
-curl -s -X POST http://127.0.0.1:10086/command \
-  -H 'Content-Type: application/json' \
-  -d '{"action":"save_as_pdf","args":{"paper_format":"a4","print_background":true,"path":"/tmp/report.pdf"},"session":"report-gen"}'
-```
+Verify the physical page count and layout of the PDF; a logical `.report-page` is not guaranteed to be one printed page.
 
 ## Short page handling
 
@@ -275,9 +337,6 @@ Same template, swap text. `lang="zh-CN"` or `lang="en"`. Generate two files if n
 - A `.report-page` is one logical authoring boundary; do not assume it maps to one printed page or nest page containers
 - Hero only on first `.report-page.cover`
 - **Long content overflow**: if a section is likely to exceed one A4 page, use the ~880px / ~45–50 line figure only as a rough screen-space planning heuristic, split it into multiple `.report-page` authoring boundaries when practical, and verify the resulting physical PDF. A single `.report-page` with `page-break-after: always` can spill onto a second physical page then force a break, leaving a mostly-blank page.
-- WebBridge: reuse `session: "report-gen"`, don't create new session per report
-- **Load kimi-webbridge skill** before using WebBridge curl commands — agents unfamiliar with the daemon will stall
-- If WebBridge rejects `file://` because local-file access is disabled, serve the output from a temporary localhost HTTP server; do not change browser permissions just for report rendering
 - Content that needs images: use `<img>` with max-width:100%, CSS handles sizing
 - `lang="en"` reports: replace TOC heading `目录` with `Contents`, hero eyebrow with English labels
 - Font weights 620/630/650 rely on Inter variable font; fallback stacks (PingFang SC, YaHei) will synthesize — acceptable but worth noting

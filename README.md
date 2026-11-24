@@ -11,10 +11,23 @@ A [Hermes Agent](https://hermes-agent.nousresearch.com) skill that turns structu
 - **A4 print styles** — `@page { size: A4 }`, page-break hints, table header repeat, orphan/widow controls; verify physical output in the target browser
 - **Short page layout** — flex styling can fill spare screen space and place a footer after content when it fits; content can reflow or span pages
 - **Self-contained HTML** — one file, all CSS inline, no external dependencies
-- **PDF via Kimi WebBridge** — recommended interactive/PDF preview path using `save_as_pdf(paper_format: "a4")`; verify the resulting PDF
+- **Native A4 PDF** — browser print, Chrome headless or Playwright; the playbook search bar is hidden in print
 - **Bilingual ready** — `lang="zh-CN"` or `lang="en"`, same template
 - **Hermes prompt-cache friendly** — static CSS and component guidance are reusable; actual caching depends on the host
 - **Structured generator** — validate JSON input and render one self-contained HTML file with the same design system
+- **Three templates, one design system (v2)** — `report` (v1, unchanged), `playbook` (operations manual with intent opener, anchored sections, step cards, offline search) and `portal` (per-client document index grouped by status)
+- **Not indexed by default (v2)** — every output carries `<meta name="robots" content="noindex, nofollow">`; override with `meta.robots`
+- **Old links stay alive (v2)** — `meta.superseded_by` adds a banner that points readers of an old version to the current one
+
+## AI calling convention (v2)
+
+Write client documents as one JSON file and render them with one command; do not hand-write HTML or CSS:
+
+```bash
+python3 -m generator.paged_report examples/playbook-data.json --output /tmp/playbook.html
+```
+
+The `template` key picks the layout (`report` when omitted, `playbook`, `portal`). Contracts: [`schemas/report.schema.json`](schemas/report.schema.json), [`schemas/playbook.schema.json`](schemas/playbook.schema.json), [`schemas/portal.schema.json`](schemas/portal.schema.json). Full authoring notes are in [`SKILL.md`](SKILL.md).
 
 ## Quick start (Hermes users)
 
@@ -58,13 +71,13 @@ The optional data-appendix and package-delivery manifest are currently proposed 
 
 The generic release boundary is recorded in [`release/manifest.json`](release/manifest.json). It includes the standard-library renderer, schema, templates, documentation, and sanitized generic HTML/data examples. Customer/domain fixtures, QA evidence, local state, tests, and development-only material are explicit exclusions rather than generic package content.
 
-The current manifest is marked `development` / `review-pending` / `migration-blocked`; the package has no stable tag or customer-release approval yet.
+The current manifest is marked `released` / `stable` / `ready` (`v2.0.0`), covering the unified `report`, `playbook`, and `portal` single-file client templates.
 
 The existing PDF and PNG previews remain in the checkout as visual evidence, but are excluded from the generic release until regenerated from sanitized fixtures. The manifest is the source of truth for what may be packaged.
 
 The generic allowlist includes [`.github/workflows/ci.yml`](.github/workflows/ci.yml), a GitHub Actions workflow whose project checks use only the Python standard library and which is configured for pushes and pull requests. Its configuration does not claim a remote CI run or release approval.
 
-The runtime renderer has no third-party dependency. Browser/PDF tooling is an external adapter: **Kimi WebBridge is recommended for interactive work and PDF preview**; **Playwright is reserved for formal repeatable E2E checks**, not the quick preview path. Any PDF still needs a physical-page and visual verification step in its target browser.
+The runtime renderer has no third-party dependency. PDF export uses the browser's native print engine (print dialog, Chrome headless or Playwright); none of them is a package dependency. Any PDF still needs a physical-page and visual verification step in its target browser.
 
 ## Template families
 
@@ -152,23 +165,13 @@ A logical `.report-page` is an authoring boundary. Long sections can spill, tabl
 
 ## PDF generation
 
-### Via Kimi WebBridge (recommended for interactive/PDF preview)
+`templates/base.css` sets `@page { size: A4; margin: 18mm 16mm }`, so the browser's own print engine produces the A4 PDF. Verify the physical page count and layout of the result.
 
-Use Kimi WebBridge for interactive inspection and quick PDF previews. Serve local files over temporary localhost HTTP when file access is unavailable, then verify the saved PDF's physical page count and layout.
+### Via Chrome headless
 
 ```bash
-# Serve /tmp/report.html from a temporary localhost HTTP server first
-python3 -m http.server 8765 --bind 127.0.0.1 --directory /tmp
-
-# Navigate to the served file (reuses same tab)
-curl -s -X POST http://127.0.0.1:10086/command \
-  -H 'Content-Type: application/json' \
-  -d '{"action":"navigate","args":{"url":"http://127.0.0.1:8765/report.html"},"session":"report-gen"}'
-
-# Save as A4 PDF
-curl -s -X POST http://127.0.0.1:10086/command \
-  -H 'Content-Type: application/json' \
-  -d '{"action":"save_as_pdf","args":{"paper_format":"a4","print_background":true,"path":"/tmp/report.pdf"},"session":"report-gen"}'
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --no-pdf-header-footer \
+  --print-to-pdf=/tmp/report.pdf file:///tmp/report.html
 ```
 
 ### Via Playwright (formal repeatable E2E only)
@@ -183,8 +186,7 @@ def to_pdf(html_path, pdf_path):
         browser = p.chromium.launch()
         page = browser.new_page()
         page.goto(f"file://{html_path}")
-        page.pdf(path=pdf_path, format="A4",
-                 margin={"top":"18mm","bottom":"18mm","left":"16mm","right":"16mm"})
+        page.pdf(path=pdf_path, format="A4", prefer_css_page_size=True, print_background=True)
         browser.close()
 ```
 
@@ -228,15 +230,22 @@ paged-report/
 │   └── manifest.json      ← Generic package allowlist/exclusions
 ├── generator/
 │   ├── __init__.py        ← Python API exports
-│   └── paged_report.py    ← JSON → self-contained HTML CLI
+│   ├── paged_report.py    ← JSON → self-contained HTML CLI (all templates)
+│   └── docs.py            ← playbook + portal renderers
 ├── schemas/
-│   └── report.schema.json ← Input contract
+│   ├── report.schema.json   ← Report input contract (+ shared meta)
+│   ├── playbook.schema.json ← Playbook input contract
+│   └── portal.schema.json   ← Portal input contract
 ├── templates/
-│   ├── base.css           ← Design system (inline into reports)
+│   ├── base.css           ← Shared design system (tokens, components, A4 print)
+│   ├── docs.css           ← Playbook + portal layer on top of base.css
 │   └── component-catalog.html  ← Visual component reference
 ├── tests/
-│   └── test_generator.py  ← Renderer and validation tests
+│   ├── test_generator.py     ← Report renderer and validation tests (v1)
+│   └── test_templates_v2.py  ← Shared master, playbook, portal tests
 └── examples/
+    ├── playbook-data.json          ← Playbook input example
+    ├── portal-data.json            ← Portal input example
     ├── confirmation-data.json      ← Structured input example
     ├── confirmation-generated.html  ← CLI-generated self-contained output
     ├── confirmation.html           ← Generic rule confirmation
